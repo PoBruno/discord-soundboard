@@ -1,0 +1,42 @@
+body {  
+    font-family: Arial, sans-serif;  
+    text-align: center;  
+    background-color: #121212; /* Tema preto */  
+    color: #ffffff; /* Texto branco */  
+    margin: 0;  
+    padding: 0;  
+}  
+
+.container {  
+    margin: 50px auto;  
+    padding: 20px;  
+    border: 1px solid #333; /* Borda mais escura */  
+    background-color: #1e1e1e; /* Background escuro */  
+    max-width: 80%;  
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);  
+}  
+
+#soundButtons {  
+    display: grid;  
+    grid-template-columns: repeat(auto-fit, minmax(290px, 2fr)); /* Grid responsiva */  
+    gap: 5px; /* Espaçamento entre os botões */  
+}  
+
+.button {  
+    margin: 10px;  
+    padding: 15px 20px; /* Aumentando o padding para maior usabilidade */  
+    background-color: #1a7122;  
+    color: white;  
+    border: none;  
+    border-radius: 5px;  
+    cursor: pointer;  
+    text-transform: capitalize; /* Para inicializar as palavras com letra maiúscula */  
+}  
+
+.button:hover {  
+    background-color: #005f5f;  
+}  
+
+#fileInput, #uploadBtn {  
+    margin-top: 20px;  
+}  

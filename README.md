@@ -2,7 +2,7 @@
 # Discord Soundboard
 
 
-```
+```bash
 # Install dependencies
 npm install
 
