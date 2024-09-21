@@ -1,0 +1,4 @@
+/backend/sounds/*.mp3
+/node_modules
+.env
+package-lock.json
