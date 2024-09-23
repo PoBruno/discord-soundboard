@@ -4,27 +4,47 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Discord Soundboard</title>
+    <title>Discord Monga</title>
     <link rel="stylesheet" href="styles.css">
 </head>
 
 <body>
     <!-- Contêiner para os botões do canal de voz -->
     <div class="voice-controls">
-        Voice Channel<select id="channelSelect" class="channel-select"></select>
+        Voice Channel
+        <select id="channelSelect" class="channel-select"></select>
         <button id="toggleVoiceBtn" class="voice-toggle-button">Join</button>
     </div>
-
-    <div class="container">
-        <h1>Discord Soundboard</h1>
+    <br><br>
+    <div class="header">
+    <h1>Discord Monga Server</h1>
         <div class="tabs">
             <button class="tab-button active" data-tab="soundboard">Soundboard</button>
+            <button class="tab-button" data-tab="junkebox">Junkebox</button>
+            <button class="tab-button" data-tab="rpg">RPG</button>
         </div>
+    </div>
+    <div class="container">
+        
         <div class="tab-content active" id="soundboard">
             <div id="soundButtons" class="grid-container"></div>
-            <input type="file" id="fileInput" accept="audio/*">
-            <button id="uploadBtn">Upload Sound</button>
+            <div id="soundboardControls">
+                <br>
+                <input type="file" id="fileInput" accept="audio/*">
+                <button id="uploadBtn">Upload Sound</button>
+            </div>
         </div>
+
+        <div class="tab-content" id="junkebox">
+            <h2>Junkebox</h2>
+            <p>Logo logo eu começo a implementar um player por aqui. Poder adicionar e gerenciar a lista de musicas.</p>
+        </div>
+
+        <div class="tab-content" id="rpg">
+            <h2>RPG</h2>
+            <p>Quero implementar umas ferramentas legais para o mestre porder dar mais imersão numa campanha de RPG.</p>
+        </div>
+
     </div>
 
     <script src="script.js"></script>

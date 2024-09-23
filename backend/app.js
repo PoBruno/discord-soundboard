@@ -212,6 +212,7 @@ app.post('/api/delete-sound', (req, res) => {
     });
 });
 
+
 // Rota para verificar se o bot está conectado a um canal de voz  
 app.get('/api/voice-status', (req, res) => {
     const guild = client.guilds.cache.get(process.env.GUILD_ID);
@@ -225,7 +226,7 @@ app.get('/api/voice-status', (req, res) => {
     } else {
         return res.json({ connected: false });
     }
-});
+});   
 
 // Configuração do cliente Discord  
 const client = new Client({

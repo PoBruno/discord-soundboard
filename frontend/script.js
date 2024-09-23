@@ -4,8 +4,31 @@ document.addEventListener("DOMContentLoaded", () => {
     const uploadBtn = document.getElementById("uploadBtn");
     const toggleVoiceBtn = document.getElementById("toggleVoiceBtn");
     const channelSelect = document.getElementById("channelSelect");
+    const tabButtons = document.querySelectorAll('.tab-button');
+    const tabContents = document.querySelectorAll('.tab-content');
+
     let isBotInVoiceChannel = false;
     let selectedChannelId = '';
+
+    // Função para alternar entre as abas  
+    function openTab(tabName) {
+        tabContents.forEach(content => {
+            content.classList.remove('active');
+        });
+
+        tabButtons.forEach(button => {
+            button.classList.remove('active');
+        });
+
+        document.getElementById(tabName).classList.add('active');
+        document.querySelector(`.tab-button[data-tab="${tabName}"]`).classList.add('active');
+    }
+
+    tabButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            openTab(button.getAttribute('data-tab'));
+        });
+    });
 
     // Função para preencher a lista de canais de voz  
     function populateVoiceChannels() {
