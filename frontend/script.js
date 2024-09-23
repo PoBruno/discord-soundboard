@@ -4,7 +4,6 @@ document.addEventListener("DOMContentLoaded", () => {
     const uploadBtn = document.getElementById("uploadBtn");
     const toggleVoiceBtn = document.getElementById("toggleVoiceBtn");
     const channelSelect = document.getElementById("channelSelect");
-
     let isBotInVoiceChannel = false;
     let selectedChannelId = '';
 
@@ -27,6 +26,28 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Preencher a lista de canais de voz ao carregar a página  
     populateVoiceChannels();
+
+    // Verificar o status do bot ao carregar a página  
+    function checkVoiceStatus() {
+        fetch('/api/voice-status')
+            .then(response => response.json())
+            .then(status => {
+                if (status.connected) {
+                    isBotInVoiceChannel = true;
+                    toggleVoiceBtn.textContent = "Leave";
+                    selectedChannelId = status.channelId;
+                    channelSelect.value = status.channelId;
+                } else {
+                    isBotInVoiceChannel = false;
+                    toggleVoiceBtn.textContent = "Join";
+                }
+            })
+            .catch(error => {
+                console.error('Failed to check voice status:', error);
+            });
+    }
+
+    checkVoiceStatus();
 
     channelSelect.addEventListener('change', (event) => {
         selectedChannelId = event.target.value;
