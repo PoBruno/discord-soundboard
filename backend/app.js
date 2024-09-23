@@ -247,3 +247,5 @@ client.login(process.env.DISCORD_TOKEN).then(() => {
 }).catch(error => {
     console.error('Failed to login to Discord:', error);
 });  
+
+
