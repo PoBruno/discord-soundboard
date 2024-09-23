@@ -6,6 +6,9 @@
 # Install dependencies
 npm install
 
+# Install ffmpeg
+sudo apt install ffmpeg
+
 # Run the app
 node backend/app.js
 
