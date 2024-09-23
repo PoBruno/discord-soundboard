@@ -2,18 +2,82 @@ document.addEventListener("DOMContentLoaded", () => {
     const soundButtons = document.getElementById("soundButtons");
     const fileInput = document.getElementById("fileInput");
     const uploadBtn = document.getElementById("uploadBtn");
+    const toggleVoiceBtn = document.getElementById("toggleVoiceBtn");
+    const channelSelect = document.getElementById("channelSelect");
+
+    let isBotInVoiceChannel = false;
+    let selectedChannelId = '';
+
+    // Função para preencher a lista de canais de voz  
+    function populateVoiceChannels() {
+        fetch('/api/voice-channels')
+            .then(response => response.json())
+            .then(channels => {
+                channels.forEach(channel => {
+                    const option = document.createElement('option');
+                    option.value = channel.id;
+                    option.textContent = channel.name;
+                    channelSelect.appendChild(option);
+                });
+            })
+            .catch(error => {
+                console.error('Failed to fetch voice channels:', error);
+            });
+    }
+
+    // Preencher a lista de canais de voz ao carregar a página  
+    populateVoiceChannels();
+
+    channelSelect.addEventListener('change', (event) => {
+        selectedChannelId = event.target.value;
+    });
 
     fetch('/api/sounds')
         .then(response => response.json())
         .then(sounds => {
             sounds.forEach(sound => {
+                const buttonContainer = document.createElement("div");
+                buttonContainer.className = "button-container";
+
                 const button = document.createElement("button");
-                // Substituir "-" por " " e capitalizar cada palavra  
                 const displayName = sound.name.replace(/-/g, ' ').replace(/\b\w/g, char => char.toUpperCase());
                 button.textContent = displayName;
                 button.className = "button";
                 button.addEventListener("click", () => playSound(sound.id));
-                soundButtons.appendChild(button);
+
+                const menuButton = document.createElement("button");
+                menuButton.textContent = "☰"; // Icon for menu  
+                menuButton.className = "menu-button";
+                menuButton.addEventListener("click", () => {
+                    buttonContainer.classList.toggle("show");
+                });
+
+                const options = document.createElement("div");
+                options.className = "options";
+
+                const renameInput = document.createElement("input");
+                renameInput.type = "text";
+                renameInput.placeholder = "New name";
+                renameInput.className = "rename-input";
+
+                const renameBtn = document.createElement("button");
+                renameBtn.textContent = "Rename";
+                renameBtn.className = "rename-btn";
+                renameBtn.addEventListener("click", () => renameSound(sound.name, renameInput.value));
+
+                const deleteBtn = document.createElement("button");
+                deleteBtn.textContent = "Delete";
+                deleteBtn.className = "delete-btn";
+                deleteBtn.addEventListener("click", () => deleteSound(sound.name));
+
+                options.appendChild(renameInput);
+                options.appendChild(renameBtn);
+                options.appendChild(deleteBtn);
+
+                buttonContainer.appendChild(button);
+                buttonContainer.appendChild(menuButton);
+                buttonContainer.appendChild(options);
+                soundButtons.appendChild(buttonContainer);
             });
         });
 
@@ -25,6 +89,40 @@ document.addEventListener("DOMContentLoaded", () => {
             },
             body: JSON.stringify({ soundId })
         });
+    }
+
+    function renameSound(oldName, newName) {
+        fetch('/api/rename-sound', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ oldName, newName })
+        }).then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload(); // Reload to show updated name  
+                } else {
+                    alert("Failed to rename sound: " + data.error);
+                }
+            });
+    }
+
+    function deleteSound(name) {
+        fetch('/api/delete-sound', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ name })
+        }).then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload(); // Reload to remove deleted sound  
+                } else {
+                    alert("Failed to delete sound: " + data.error);
+                }
+            });
     }
 
     uploadBtn.addEventListener("click", () => {
@@ -41,7 +139,46 @@ document.addEventListener("DOMContentLoaded", () => {
                     if (data.success) {
                         location.reload(); // Reload to show new sound  
                     } else {
-                        alert("Failed to upload sound.");
+                        alert("Failed to upload sound: " + data.error);
+                    }
+                });
+        } else {
+            alert("Please select a .mp3 file to upload.");
+        }
+    });
+
+    toggleVoiceBtn.addEventListener("click", () => {
+        if (!selectedChannelId) {
+            alert("Please select a voice channel first.");
+            return;
+        }
+
+        if (isBotInVoiceChannel) {
+            fetch('/api/leave-voice', { method: 'POST' })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        isBotInVoiceChannel = false;
+                        toggleVoiceBtn.textContent = "Join";
+                    } else {
+                        alert("Failed to leave voice channel.");
+                    }
+                });
+        } else {
+            fetch('/api/join-voice', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ channelId: selectedChannelId })
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        isBotInVoiceChannel = true;
+                        toggleVoiceBtn.textContent = "Leave";
+                    } else {
+                        alert("Failed to join voice channel.");
                     }
                 });
         }
