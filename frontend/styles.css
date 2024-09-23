@@ -1,42 +1,108 @@
-body {  
-    font-family: Arial, sans-serif;  
-    text-align: center;  
-    background-color: #121212; /* Tema preto */  
-    color: #ffffff; /* Texto branco */  
-    margin: 0;  
-    padding: 0;  
-}  
+/* Estilo global */
+body {
+    font-family: Arial, sans-serif;
+    text-align: center;
+    background-color: #121212;
+    /* Tema preto */
+    color: #ffffff;
+    /* Texto branco */
+    margin: 0;
+    padding: 0;
+}
 
-.container {  
-    margin: 50px auto;  
-    padding: 20px;  
-    border: 1px solid #333; /* Borda mais escura */  
-    background-color: #1e1e1e; /* Background escuro */  
-    max-width: 80%;  
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);  
-}  
+.container {
+    margin: 50px auto;
+    padding: 20px;
+    border: 1px solid #333;
+    /* Borda mais escura */
+    background-color: #1e1e1e;
+    /* Background escuro */
+    max-width: 80%;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+}
 
-#soundButtons {  
-    display: grid;  
-    grid-template-columns: repeat(auto-fit, minmax(290px, 2fr)); /* Grid responsiva */  
-    gap: 5px; /* Espaçamento entre os botões */  
-}  
+/* Posicionando o botão de entrar/sair do canal de voz no canto superior direito */
+.voice-toggle-button {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    padding: 10px 20px;
+    background-color: #1a7122;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    z-index: 1000;
+    /* Garante que o botão fique acima dos outros elementos */
+}
 
-.button {  
-    margin: 10px;  
-    padding: 15px 20px; /* Aumentando o padding para maior usabilidade */  
-    background-color: #1a7122;  
-    color: white;  
-    border: none;  
-    border-radius: 5px;  
-    cursor: pointer;  
-    text-transform: capitalize; /* Para inicializar as palavras com letra maiúscula */  
-}  
+.voice-toggle-button:hover {
+    background-color: #005f5f;
+}
 
-.button:hover {  
-    background-color: #005f5f;  
-}  
+#soundButtons {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(290px, 2fr));
+    /* Grid responsiva */
+    gap: 5px;
+    /* Espaçamento entre os botões */
+}
 
-#fileInput, #uploadBtn {  
-    margin-top: 20px;  
-}  
+.button-container {
+    position: relative;
+}
+
+.button {
+    margin: 10px;
+    padding: 1px 20px;
+    /* fixar tamanho dos botões */
+    width: 250px;
+    height: 40px;
+    background-color: #1a7122;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    text-transform: capitalize;
+    /* Para inicializar as palavras com letra maiúscula */
+}
+
+.button:hover {
+    background-color: #005f5f;
+}
+
+#fileInput,
+#uploadBtn {
+    margin-top: 20px;
+}
+
+/* Estilo para o botão de menu */
+.menu-button {
+    background: none;
+    border: none;
+    color: white;
+    cursor: pointer;
+    margin-left: 10px;
+}
+
+.menu-button:hover {
+    color: #005f5f;
+}
+
+/* Estilo para as opções de rename e delete escondidas */
+.options {
+    display: none;
+    flex-direction: column;
+    align-items: flex-start;
+    margin-top: 10px;
+}
+
+.show .options {
+    display: flex;
+}
+
+.rename-input,
+.rename-btn,
+.delete-btn {
+    margin: 5px 0;
+}

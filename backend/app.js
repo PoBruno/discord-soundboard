@@ -2,22 +2,19 @@ const express = require('express');
 const fileUpload = require('express-fileupload');
 const path = require('path');
 const fs = require('fs');
-const cookieParser = require('cookie-parser'); // Importando o cookie-parser  
+const cookieParser = require('cookie-parser');
 const { Client, GatewayIntentBits } = require('discord.js');
-const { joinVoiceChannel, createAudioPlayer, createAudioResource, AudioPlayerStatus, generateDependencyReport } = require('@discordjs/voice');
-const sodium = require('libsodium-wrappers');
+const { joinVoiceChannel, createAudioPlayer, createAudioResource, AudioPlayerStatus, getVoiceConnection } = require('@discordjs/voice');
 require('dotenv').config();
 
 (async () => {
-    await sodium.ready;
-
     const app = express();
     const port = process.env.PORT || 3000;
     const PASSWORD = process.env.PASSWORD || 'monga';
 
     app.use(express.json());
     app.use(fileUpload());
-    app.use(cookieParser()); // Adicionando o middleware cookie-parser  
+    app.use(cookieParser());
 
     const soundsDir = path.join(__dirname, 'sounds');
 
@@ -58,10 +55,7 @@ require('dotenv').config();
     app.get('/api/sounds', (req, res) => {
         fs.readdir(soundsDir, (err, files) => {
             if (err) return res.status(500).json({ error: 'Failed to list sounds' });
-            const sounds = files.filter(file => file.endsWith('.mp3')).map((file, index) => ({
-                id: index,
-                name: path.basename(file, '.mp3')
-            }));
+            const sounds = files.filter(file => file.endsWith('.mp3')).map((file, index) => ({ id: index, name: path.basename(file, '.mp3') }));
             return res.json(sounds);
         });
     });
@@ -71,17 +65,75 @@ require('dotenv').config();
         if (!req.files || !req.files.sound) {
             return res.status(400).json({ error: 'No file uploaded' });
         }
+
         const sound = req.files.sound;
+
+        // Verificar se o arquivo é um .mp3  
+        if (sound.mimetype !== 'audio/mpeg') {
+            return res.status(400).json({ error: 'Only .mp3 files are allowed' });
+        }
+
         const uploadPath = path.join(soundsDir, sound.name);
+
+        // Certifique-se de que a pasta 'sounds' existe, senão crie-a  
+        if (!fs.existsSync(soundsDir)) {
+            fs.mkdirSync(soundsDir, { recursive: true });
+        }
+
+        // Mover o arquivo para a pasta 'sounds'  
         sound.mv(uploadPath, (err) => {
             if (err) return res.status(500).json({ error: 'Failed to upload sound' });
             return res.json({ success: true });
         });
     });
 
-    // Tocar um som  
+    // Rota para fazer o bot entrar no canal de voz  
+    app.post('/api/join-voice', async (req, res) => {
+        try {
+            const channel = client.channels.cache.get(process.env.VOICE_CHANNEL_ID);
+            if (!channel) {
+                console.error('Channel not found');
+                return res.status(404).json({ error: 'Channel not found' });
+            }
+
+            console.log(`Joining voice channel: ${channel.id}`);
+            joinVoiceChannel({
+                channelId: channel.id,
+                guildId: channel.guild.id,
+                adapterCreator: channel.guild.voiceAdapterCreator,
+                selfDeaf: false,
+                selfMute: false,
+            });
+
+            return res.json({ success: true });
+        } catch (error) {
+            console.error('Failed to join voice channel:', error);
+            return res.status(500).json({ error: 'Failed to join voice channel' });
+        }
+    });
+
+    // Rota para fazer o bot sair do canal de voz  
+    app.post('/api/leave-voice', (req, res) => {
+        try {
+            const channel = client.channels.cache.get(process.env.VOICE_CHANNEL_ID);
+            if (!channel) return res.status(404).json({ error: 'Channel not found' });
+
+            const connection = getVoiceConnection(channel.guild.id);
+            if (connection) {
+                connection.destroy();
+                return res.json({ success: true });
+            } else {
+                return res.status(404).json({ error: 'Bot is not in a voice channel' });
+            }
+        } catch (error) {
+            console.error('Failed to leave voice channel:', error);
+            return res.status(500).json({ error: 'Failed to leave voice channel' });
+        }
+    });
+
+    // Rota para tocar um som  
     app.post('/api/play-sound', (req, res) => {
-        const soundId = Number(req.body.soundId);
+        const { soundId } = req.body;
         fs.readdir(soundsDir, (err, files) => {
             if (err) return res.status(500).json({ error: 'Failed to list sounds' });
             const sounds = files.filter(file => file.endsWith('.mp3'));
@@ -89,6 +141,7 @@ require('dotenv').config();
                 return res.status(400).json({ error: 'Invalid sound ID' });
             }
             const soundPath = path.join(soundsDir, sounds[soundId]);
+            console.log(`Playing sound: ${soundPath}`);
             playSoundInDiscord(soundPath);
             return res.json({ success: true });
         });
@@ -96,34 +149,48 @@ require('dotenv').config();
 
     function playSoundInDiscord(soundPath) {
         const channel = client.channels.cache.get(process.env.VOICE_CHANNEL_ID);
-        if (!channel) return console.error('Channel not found');
+        const connection = getVoiceConnection(channel.guild.id);
+        if (!connection) {
+            console.error('Bot is not connected to a voice channel');
+            return;
+        }
 
-        // Entrar no canal de voz e garantir que o bot não está mutado ou surdo  
-        const connection = joinVoiceChannel({
-            channelId: channel.id,
-            guildId: channel.guild.id,
-            adapterCreator: channel.guild.voiceAdapterCreator,
-            selfDeaf: false,  // Garantir que o bot não está surdo  
-            selfMute: false   // Garantir que o bot não está mudo  
-        });
-
-        // Criar o recurso de áudio e o player  
         const resource = createAudioResource(soundPath);
         const player = createAudioPlayer();
 
-        // Tocar o som  
         player.play(resource);
         connection.subscribe(player);
 
-        // Desconectar após o som ser tocado  
         player.on(AudioPlayerStatus.Idle, () => {
-            connection.destroy();
+            console.log('Finished playing sound');
         });
     }
 
+    // Rota para renomear um som  
+    app.post('/api/rename-sound', (req, res) => {
+        const { oldName, newName } = req.body;
+        const oldPath = path.join(soundsDir, oldName + '.mp3');
+        const newPath = path.join(soundsDir, newName + '.mp3');
+
+        fs.rename(oldPath, newPath, (err) => {
+            if (err) return res.status(500).json({ error: 'Failed to rename sound' });
+            return res.json({ success: true });
+        });
+    });
+
+    // Rota para excluir um som  
+    app.post('/api/delete-sound', (req, res) => {
+        const { name } = req.body;
+        const filePath = path.join(soundsDir, name + '.mp3');
+
+        fs.unlink(filePath, (err) => {
+            if (err) return res.status(500).json({ error: 'Failed to delete sound' });
+            return res.json({ success: true });
+        });
+    });
+
     // Configuração do cliente Discord  
     const client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildVoiceStates] });
-
     client.once('ready', () => {
         console.log('Discord bot is ready');
     });
