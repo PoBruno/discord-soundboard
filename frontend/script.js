@@ -3,8 +3,34 @@ document.addEventListener("DOMContentLoaded", () => {
     const fileInput = document.getElementById("fileInput");
     const uploadBtn = document.getElementById("uploadBtn");
     const toggleVoiceBtn = document.getElementById("toggleVoiceBtn");
+    const channelSelect = document.getElementById("channelSelect");
 
     let isBotInVoiceChannel = false;
+    let selectedChannelId = '';
+
+    // Função para preencher a lista de canais de voz  
+    function populateVoiceChannels() {
+        fetch('/api/voice-channels')
+            .then(response => response.json())
+            .then(channels => {
+                channels.forEach(channel => {
+                    const option = document.createElement('option');
+                    option.value = channel.id;
+                    option.textContent = channel.name;
+                    channelSelect.appendChild(option);
+                });
+            })
+            .catch(error => {
+                console.error('Failed to fetch voice channels:', error);
+            });
+    }
+
+    // Preencher a lista de canais de voz ao carregar a página  
+    populateVoiceChannels();
+
+    channelSelect.addEventListener('change', (event) => {
+        selectedChannelId = event.target.value;
+    });
 
     fetch('/api/sounds')
         .then(response => response.json())
@@ -122,24 +148,35 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     toggleVoiceBtn.addEventListener("click", () => {
+        if (!selectedChannelId) {
+            alert("Please select a voice channel first.");
+            return;
+        }
+
         if (isBotInVoiceChannel) {
             fetch('/api/leave-voice', { method: 'POST' })
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
                         isBotInVoiceChannel = false;
-                        toggleVoiceBtn.textContent = "Join Voice Channel";
+                        toggleVoiceBtn.textContent = "Join";
                     } else {
                         alert("Failed to leave voice channel.");
                     }
                 });
         } else {
-            fetch('/api/join-voice', { method: 'POST' })
+            fetch('/api/join-voice', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ channelId: selectedChannelId })
+            })
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
                         isBotInVoiceChannel = true;
-                        toggleVoiceBtn.textContent = "Leave Voice Channel";
+                        toggleVoiceBtn.textContent = "Leave";
                     } else {
                         alert("Failed to join voice channel.");
                     }
